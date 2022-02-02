@@ -27,6 +27,16 @@ using namespace vex;
 
 competition Competition;  // A global instance of competition
 
+class driveTrain
+{
+  public:
+  
+  driveTrain()
+  {
+
+  }
+};
+
 /*---------------------------------------------------------------------------*/
 /*                          Pre-Autonomous Functions                         */
 /*                                                                           */
@@ -69,7 +79,7 @@ void autonomous(void)
 
 void pre_user(void)
 {
-  
+
 }
 
 void usercontrol(void)

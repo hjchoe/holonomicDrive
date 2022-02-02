@@ -10,11 +10,12 @@
 // ---- START VEXCODE CONFIGURED DEVICES ----
 // Robot Configuration:
 // [Name]               [Type]        [Port(s)]         
-// Controller1          controller           
-// frontMotor           motor         5
-// backMotor            motor         7
-// leftMotor            motor         8
-// rightMotor           motor         9
+// Controller1          controller         
+// frontback            motor           
+// frontMotor           motor         13
+// backMotor            motor         17
+// leftMotor            motor         14
+// rightMotor           motor         16
 // ---- END VEXCODE CONFIGURED DEVICES ----
 
 // |-------------------- Library Imports --------------------|
@@ -27,15 +28,76 @@ using namespace vex;
 
 competition Competition;  // A global instance of competition
 
+task driveMotors;
+
 class driveTrain
 {
   public:
+
+  static bool rotateState;
   
   driveTrain()
   {
+    refreshMotors();
 
+    Controller1.Axis3.changed(setDirection);
+    Controller1.Axis4.changed(setDirection);
+    Controller1.Axis1.changed(setRotateDirection);
+  }
+
+  static void setRotateDirection()
+  {
+    rotateState = true;
+    if (rotateState)
+    {
+      int rotate = Controller1.Axis1.position() ^ 3 / 20000;
+      leftMotor.setVelocity(-rotate, percentUnits::pct);
+      rightMotor.setVelocity(rotate, percentUnits::pct);
+      frontMotor.setVelocity(rotate, percentUnits::pct);
+      backMotor.setVelocity(-rotate, percentUnits::pct);
+    }
+    rotateState = false;
+  }
+
+  static void setDirection()
+  {
+    rotateState = false;
+    if (!rotateState)
+    {
+      int updown = Controller1.Axis3.position() ^ 3 / 20000;
+      int leftright = Controller1.Axis4.position() ^ 3 / 20000;
+
+      leftrightGroup.setVelocity(updown, percentUnits::pct);
+      frontbackGroup.setVelocity(leftright, percentUnits::pct);
+    }
+    rotateState = true;
+  }
+
+  void refreshMotors()
+  {
+    frontMotor.setVelocity(0, percentUnits::pct);
+    backMotor.setVelocity(0, percentUnits::pct);
+    leftMotor.setVelocity(0, percentUnits::pct);
+    rightMotor.setVelocity(0, percentUnits::pct);
   }
 };
+bool driveTrain::rotateState = true;
+
+// |-------------------- Function Definitions --------------------|
+
+int driveMotorsCallback()
+{
+  while (true)
+  {
+    frontMotor.spin(forward);
+    backMotor.spin(forward);
+    leftMotor.spin(forward);
+    rightMotor.spin(forward);
+
+    wait(25, msec);
+  }
+  return 0;
+}
 
 /*---------------------------------------------------------------------------*/
 /*                          Pre-Autonomous Functions                         */
@@ -85,6 +147,9 @@ void pre_user(void)
 void usercontrol(void)
 {
   pre_user();
+
+  driveTrain dt;
+  driveMotors = task(driveMotorsCallback, vex::task::taskPriorityHigh);
 
   while (1)
   {
